@@ -10,7 +10,7 @@ Let AI clients control a running Cisco Packet Tracer instance. Open source.
 
 This is a fork of [muhammadbalawal/cisco-pt-mcp](https://github.com/muhammadbalawal/cisco-pt-mcp). All credit for the original server and the Packet Tracer extension goes to them.
 
-I'm a CpE student and I was new to networking when I started. For my Networks Lab I had to build a clinic network in Packet Tracer that matched a floor plan. I already knew about MCP and agentic AI, so I looked for a way to let Claude talk to Packet Tracer instead of dragging 130 devices around by hand. This server was exactly that, and it worked: Claude built most of the clinic from the floor plan and I was honestly impressed.
+I'm a CpE student and I was new to networking when I started. For my Networks Lab, my groupmate drew a floor plan of a clinic and my part was to turn it into a working Packet Tracer simulation that matched it. I already knew about MCP and agentic AI, so I looked for a way to let Claude talk to Packet Tracer instead of dragging 130 devices around by hand. This server was exactly that, and it worked: Claude built most of the clinic from the floor plan and I was honestly impressed.
 
 It was also limiting for what I needed, so I changed three things:
 
