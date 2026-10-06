@@ -45,6 +45,23 @@ def _normalize_tool_arguments(arguments: Any) -> dict[str, Any]:
     return arguments
 
 
+def _inner(res: dict) -> dict:
+    """PT replies are {success: <script ran>, result: {success: <real outcome>, ...}}.
+
+    Return the inner dict when present, else the reply itself (error envelopes
+    built by the webview have no nesting).
+    """
+    inner = res.get("result") if isinstance(res, dict) else None
+    if isinstance(inner, dict) and "success" in inner:
+        return inner
+    return res
+
+
+async def _name_taken(bridge: PTBridge, name: str) -> bool:
+    res = await bridge.call_tool("getDeviceInfo", {"deviceName": name})
+    return _inner(res).get("success") is True
+
+
 def build_server(bridge: PTBridge) -> Server:
     """Wire MCP handlers onto a fresh ``Server`` instance."""
     app: Server = Server("cisco-pt-mcp")
@@ -75,6 +92,14 @@ def build_server(bridge: PTBridge) -> Server:
 
         try:
             args = _normalize_tool_arguments(arguments)
+
+            # PT happily creates two devices with one name; every later call by
+            # that name is then ambiguous. Refuse up front.
+            new_name = args.get("deviceName") if name == "addDevice" else (
+                args.get("newName") if name == "renameDevice" else None)
+            if new_name and await _name_taken(bridge, new_name):
+                return _to_text_content({"success": False, "error": f"device name already exists: {new_name}"})
+
             result = await bridge.call_tool(name, args)
         except MCPRequestError as exc:
             log.warning("tool %s rejected invalid arguments: %s", name, exc)

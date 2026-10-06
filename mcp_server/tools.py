@@ -6,11 +6,13 @@ exactly so ``bridge.py`` can forward by name without translation.
 
 from __future__ import annotations
 
+from .device_models import DEVICE_MODELS
+
 # IOS interface naming pattern reused by addLink / removeLink.
-INTERFACE_PATTERN = (
-    r"^(GigabitEthernet|FastEthernet|Ethernet|Serial|Gi|Fa|Se)"
-    r"(\d+)?(/\d+){0,2}$"
-)
+# Non-IOS devices use other port names ("Port 0" on AccessPoint-PT/TV-PT,
+# "Switch"/"PC" on the 7960, "Management1/1" on the 5506-X), so accept any
+# non-empty name and let PT reject what doesn't exist.
+INTERFACE_PATTERN = r"^\S.*$"
 
 TOOLS: list[dict] = [
     {
@@ -29,15 +31,14 @@ TOOLS: list[dict] = [
                 },
                 "deviceModel": {
                     "type": "string",
-                    "enum": [
-                        "2911", "1941", "2811", "2901",
-                        "2960-24TT", "2950-24", "3560-24PS",
-                        "PC-PT", "Server-PT", "Laptop-PT", "Printer-PT",
-                    ],
+                    "enum": DEVICE_MODELS,
                     "description": (
-                        "Device model. Router: 2911/1941/2811/2901. "
-                        "Switch: 2960-24TT/2950-24/3560-24PS. "
-                        "End device: PC-PT/Server-PT/Laptop-PT/Printer-PT."
+                        "Device model (any key of the extension's allDeviceTypes). "
+                        "Common: Router 2911/1941/2811/2901/ISR4331; "
+                        "Switch 2960-24TT/2950-24/3560-24PS/3650-24PS; "
+                        "End device PC-PT/Server-PT/Laptop-PT/Printer-PT/TV-PT; "
+                        "IP phone 7960; Wireless AccessPoint-PT(-N/-AC)/LAP-PT/WLC-2504; "
+                        "Firewall 5506-X/5505; WAN Cloud-PT; IoT Webcam/Thing/..."
                     ),
                 },
                 "x": {"type": "number", "description": "X coordinate on workspace."},
