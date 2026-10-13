@@ -10,13 +10,31 @@ Let AI clients control a running Cisco Packet Tracer instance. Open source.
 
 This is a fork of [muhammadbalawal/cisco-pt-mcp](https://github.com/muhammadbalawal/cisco-pt-mcp). All credit for the original server and the Packet Tracer extension goes to them.
 
-I'm a CpE student and I was new to networking when I started. For my Networks Lab, my groupmate drew a floor plan of a clinic and my part was to turn it into a working Packet Tracer simulation that matched it. I already knew about MCP and agentic AI, so I looked for a way to let Claude talk to Packet Tracer instead of dragging 130 devices around by hand. This server was exactly that, and it worked: Claude built most of the clinic from the floor plan and I was honestly impressed.
+I'm a CpE student and I was new to networking when I started. For my Networks Lab, my groupmate drew a floor plan of a clinic and my part was to turn it into a working Packet Tracer simulation that matched it. I already knew about MCP and agentic AI, so I looked for a way to let Claude talk to Packet Tracer instead of dragging 116 devices around by hand. This server was exactly that, and it worked: Claude built most of the clinic from the floor plan and I was honestly impressed.
 
 It was also limiting for what I needed, so I changed three things:
 
 - **All 151 device models.** `addDevice` only accepted 11 (a few routers and switches, PC, server, laptop, printer). The list now comes from every device type in the extension's `allDeviceTypes`, so I could place real IP phones (7960), webcams, access points and a TV instead of stand-ins. I placed all of those. The TV (`TV-PT`) has no network port, so it stayed a stand-in, and I never drove the ASA (`5506-X`).
 - **Port names.** The cable tools only accepted IOS-style names like `FastEthernet0/1`. Other devices use things like `Port 0` (access point, TV) and `Switch` / `PC` (phone), so the check now accepts any non-empty name and lets Packet Tracer reject what doesn't exist.
 - **Duplicate name guard.** Packet Tracer lets you create two devices with the same name, and then every later call by that name is ambiguous. `addDevice` and `renameDevice` now refuse a name that's already on the canvas.
+
+### A test run: clinic floor plan to a Packet Tracer network
+
+This is the practical test of the fork. The floor plan was drawn by [jan-orit](https://github.com/jan-orit), with the network the clinic needs drawn on top of it:
+
+![Floor plan drawn by jan-orit](docs/example/floor-plan.png)
+
+And this is the network Claude built from it in Packet Tracer through this server, with the 116 devices placed at their positions on the plan:
+
+![The network built in Packet Tracer](docs/example/pt-network.png)
+
+Rooms, device positions and counts follow the plan closely: a layer-3 core, 8 access switches, 13 VLANs, NAT, DHCP, 26 IP phones, 17 cameras and 11 access points. The cables don't follow the routes on the plan, because Packet Tracer draws every link as a straight line. Most of the network was built through the tool. I did the parts it couldn't: DHCP on the 17 webcams, the power adapters for the 26 phones, the background image, and saving the file.
+
+**How I ran it.** I didn't let it build anything first. It tested what the tools could and couldn't do, then listed every room and device from the plan with its source, and I checked that list against the drawing. Then it drafted the design, froze the wiring, and wrote down its risks and the questions it had, and I answered them. Only after I approved did it build, in small stages, checking the network against the frozen design after each one.
+
+**Where the loop was clunky.** The tools can't read a device's config or the output of a command, so the agent never saw whether something it typed worked. It checked with pings and port state instead, and when it got stuck I sent screenshots of device windows. That's how we found the webcam's real port. A lot of the back and forth was me being its eyes.
+
+**What I'd recommend.** If you want an agent to build a network from a floor plan, give it plans that already have the network drawn on them, as CAD files, so the canvas is something it can read and not something it guesses from a picture. And make it freeze the design and ask its questions before it touches anything. That order is what kept the build from drifting.
 
 ### Still broken
 
